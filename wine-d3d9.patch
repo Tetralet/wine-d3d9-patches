@@ -1,50 +1,7 @@
-From 3b06e430d1a1da2b50de4d8757dc4d5ef429dbd2 Mon Sep 17 00:00:00 2001
-From: Nick Sarnie <sarnex@gentoo.org>
-Date: Mon, 18 Feb 2019 10:01:15 -0500
-Subject: [PATCH] Wine D3D9
-
-Signed-off-by: Nick Sarnie <sarnex@gentoo.org>
----
- configure.ac                      |  188 ++++
- dlls/d3d9-nine/Makefile.in        |   15 +
- dlls/d3d9-nine/d3d9-nine.spec     |   14 +
- dlls/d3d9-nine/d3d9_main.c        |  173 +++
- dlls/d3d9-nine/d3dadapter9.c      |  898 +++++++++++++++
- dlls/d3d9-nine/d3dadapter9.h      |   32 +
- dlls/d3d9-nine/device_wrap.c      |  500 +++++++++
- dlls/d3d9-nine/device_wrap.h      |   26 +
- dlls/d3d9-nine/dri3.c             | 1426 +++++++++++++++++++++++
- dlls/d3d9-nine/dri3.h             |   91 ++
- dlls/d3d9-nine/present.c          | 1748 +++++++++++++++++++++++++++++
- dlls/d3d9-nine/present.h          |   40 +
- dlls/d3d9-nine/shader_validator.c |   88 ++
- dlls/d3d9-nine/shader_validator.h |   29 +
- dlls/d3d9-nine/version.rc         |   26 +
- dlls/d3d9-nine/wndproc.c          |  277 +++++
- dlls/d3d9-nine/wndproc.h          |   41 +
- 17 files changed, 5612 insertions(+)
- create mode 100644 dlls/d3d9-nine/Makefile.in
- create mode 100644 dlls/d3d9-nine/d3d9-nine.spec
- create mode 100644 dlls/d3d9-nine/d3d9_main.c
- create mode 100644 dlls/d3d9-nine/d3dadapter9.c
- create mode 100644 dlls/d3d9-nine/d3dadapter9.h
- create mode 100644 dlls/d3d9-nine/device_wrap.c
- create mode 100644 dlls/d3d9-nine/device_wrap.h
- create mode 100644 dlls/d3d9-nine/dri3.c
- create mode 100644 dlls/d3d9-nine/dri3.h
- create mode 100644 dlls/d3d9-nine/present.c
- create mode 100644 dlls/d3d9-nine/present.h
- create mode 100644 dlls/d3d9-nine/shader_validator.c
- create mode 100644 dlls/d3d9-nine/shader_validator.h
- create mode 100644 dlls/d3d9-nine/version.rc
- create mode 100644 dlls/d3d9-nine/wndproc.c
- create mode 100644 dlls/d3d9-nine/wndproc.h
-
-diff --git a/configure.ac b/configure.ac
-index 1b425d22a2..ded3ac4d91 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -68,6 +68,14 @@ AC_ARG_WITH(openal,    AS_HELP_STRING([--without-openal],[do not use OpenAL]),
+diff -Nur -Nur wine-d3d9-4.21.orig/configure.ac wine-d3d9-4.21/configure.ac
+--- wine-d3d9-4.21.orig/configure.ac	2019-12-02 13:42:13.837900783 +0800
++++ wine-d3d9-4.21/configure.ac	2019-12-02 14:24:02.105864955 +0800
+@@ -71,6 +71,14 @@
  AC_ARG_WITH(opencl,    AS_HELP_STRING([--without-opencl],[do not use OpenCL]),
              [if test "x$withval" = "xno"; then ac_cv_header_CL_cl_h=no; ac_cv_header_OpenCL_opencl_h=no; fi])
  AC_ARG_WITH(opengl,    AS_HELP_STRING([--without-opengl],[do not use OpenGL]))
@@ -59,7 +16,7 @@ index 1b425d22a2..ded3ac4d91 100644
  AC_ARG_WITH(osmesa,     AS_HELP_STRING([--without-osmesa],[do not use the OSMesa library]))
  AC_ARG_WITH(oss,       AS_HELP_STRING([--without-oss],[do not use the OSS sound support]))
  AC_ARG_WITH(pcap,      AS_HELP_STRING([--without-pcap],[do not use the Packet Capture library]),
-@@ -402,6 +410,8 @@ AC_CHECK_LIB(ossaudio,_oss_ioctl)
+@@ -427,6 +435,8 @@
  
  AC_SUBST(OPENGL_LIBS,"")
  
@@ -68,9 +25,9 @@ index 1b425d22a2..ded3ac4d91 100644
  dnl **** Check for header files ****
  
  AC_SYS_LARGEFILE()
-@@ -1240,6 +1250,183 @@ This probably prevents linking to OpenGL. Try deleting the file and restarting c
-     WINE_WARNING_WITH(opengl,[test -n "$opengl_msg"],[$opengl_msg
- OpenGL and Direct3D won't be supported.])
+@@ -1352,6 +1362,183 @@
+     WINE_NOTICE_WITH(va,[test "x$ac_cv_lib_soname_va" = "x" -o "x$ac_cv_lib_soname_va_x11" = "x" -o "x$ac_cv_lib_soname_va_drm" = "x"],
+                      [libva ${notice_platform}development files not found, GPU video acceleration won't be supported.])
  
 +    dnl Check for d3d9-nine support
 +    if test "x$with_d3d9_nine" = "xauto" && (test "x$with_d3d9_nine_module" = "xauto" || test "x$with_d3d9_nine_headers_path" = "xauto")
@@ -252,7 +209,7 @@ index 1b425d22a2..ded3ac4d91 100644
      CPPFLAGS="$ac_save_CPPFLAGS"
  else
      X_CFLAGS=""
-@@ -3161,6 +3348,7 @@ WINE_CONFIG_MAKEFILE(dlls/d3d8)
+@@ -3204,6 +3391,7 @@
  WINE_CONFIG_MAKEFILE(dlls/d3d8/tests)
  WINE_CONFIG_MAKEFILE(dlls/d3d9)
  WINE_CONFIG_MAKEFILE(dlls/d3d9/tests)
@@ -260,11 +217,9 @@ index 1b425d22a2..ded3ac4d91 100644
  WINE_CONFIG_MAKEFILE(dlls/d3dcompiler_33)
  WINE_CONFIG_MAKEFILE(dlls/d3dcompiler_34)
  WINE_CONFIG_MAKEFILE(dlls/d3dcompiler_35)
-diff --git a/dlls/d3d9-nine/Makefile.in b/dlls/d3d9-nine/Makefile.in
-new file mode 100644
-index 0000000000..c6df8d7dbe
---- /dev/null
-+++ b/dlls/d3d9-nine/Makefile.in
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/Makefile.in wine-d3d9-4.21/dlls/d3d9-nine/Makefile.in
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/Makefile.in	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/Makefile.in	2019-12-02 14:24:02.109864955 +0800
 @@ -0,0 +1,15 @@
 +MODULE    = d3d9-nine.dll
 +IMPORTS   = dxguid uuid advapi32 gdi32 user32
@@ -281,11 +236,9 @@ index 0000000000..c6df8d7dbe
 +        shader_validator.c
 +
 +RC_SRCS = version.rc
-diff --git a/dlls/d3d9-nine/d3d9-nine.spec b/dlls/d3d9-nine/d3d9-nine.spec
-new file mode 100644
-index 0000000000..a33cba51e7
---- /dev/null
-+++ b/dlls/d3d9-nine/d3d9-nine.spec
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/d3d9-nine.spec wine-d3d9-4.21/dlls/d3d9-nine/d3d9-nine.spec
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/d3d9-nine.spec	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/d3d9-nine.spec	2019-12-02 14:24:02.109864955 +0800
 @@ -0,0 +1,14 @@
 +@ stdcall Direct3DShaderValidatorCreate9()
 +@ stub PSGPError
@@ -301,11 +254,9 @@ index 0000000000..a33cba51e7
 +@ stdcall DebugSetMute()
 +@ stdcall Direct3DCreate9(long)
 +@ stdcall Direct3DCreate9Ex(long ptr)
-diff --git a/dlls/d3d9-nine/d3d9_main.c b/dlls/d3d9-nine/d3d9_main.c
-new file mode 100644
-index 0000000000..d1efdf4a71
---- /dev/null
-+++ b/dlls/d3d9-nine/d3d9_main.c
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/d3d9_main.c wine-d3d9-4.21/dlls/d3d9-nine/d3d9_main.c
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/d3d9_main.c	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/d3d9_main.c	2019-12-02 14:24:02.113864955 +0800
 @@ -0,0 +1,173 @@
 +/*
 + * Direct3D 9
@@ -480,11 +431,9 @@ index 0000000000..d1efdf4a71
 +{
 +    FIXME("color 0x%08x, name %s stub!\n", color, debugstr_w(name));
 +}
-diff --git a/dlls/d3d9-nine/d3dadapter9.c b/dlls/d3d9-nine/d3dadapter9.c
-new file mode 100644
-index 0000000000..188eebf763
---- /dev/null
-+++ b/dlls/d3d9-nine/d3dadapter9.c
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/d3dadapter9.c wine-d3d9-4.21/dlls/d3d9-nine/d3dadapter9.c
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/d3dadapter9.c	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/d3dadapter9.c	2019-12-02 14:24:02.113864955 +0800
 @@ -0,0 +1,898 @@
 +/*
 + * Wine IDirect3D9 interface using ID3DAdapter9
@@ -1384,11 +1333,9 @@ index 0000000000..188eebf763
 +            "\nFor more information visit https://wiki.ixit.cz/d3d9\033[0m\n");
 +    return D3D_OK;
 +}
-diff --git a/dlls/d3d9-nine/d3dadapter9.h b/dlls/d3d9-nine/d3dadapter9.h
-new file mode 100644
-index 0000000000..ad54f67285
---- /dev/null
-+++ b/dlls/d3d9-nine/d3dadapter9.h
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/d3dadapter9.h wine-d3d9-4.21/dlls/d3d9-nine/d3dadapter9.h
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/d3dadapter9.h	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/d3dadapter9.h	2019-12-02 14:24:02.117864955 +0800
 @@ -0,0 +1,32 @@
 +/*
 + * D3DAdapter9 interface
@@ -1422,11 +1369,9 @@ index 0000000000..ad54f67285
 +HRESULT d3dadapter9_new(Display *gdi_display, boolean ex, IDirect3D9Ex **ppOut);
 +
 +#endif /* __WINE_D3D9ADAPTER_H */
-diff --git a/dlls/d3d9-nine/device_wrap.c b/dlls/d3d9-nine/device_wrap.c
-new file mode 100644
-index 0000000000..e662c6f89a
---- /dev/null
-+++ b/dlls/d3d9-nine/device_wrap.c
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/device_wrap.c wine-d3d9-4.21/dlls/d3d9-nine/device_wrap.c
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/device_wrap.c	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/device_wrap.c	2019-12-02 14:24:02.117864955 +0800
 @@ -0,0 +1,500 @@
 +/*
 + * Copyright 2016 Axel Davy
@@ -1928,11 +1873,9 @@ index 0000000000..e662c6f89a
 +{
 +    return &WineNineDevice9_vtable;
 +}
-diff --git a/dlls/d3d9-nine/device_wrap.h b/dlls/d3d9-nine/device_wrap.h
-new file mode 100644
-index 0000000000..8f5e7206a0
---- /dev/null
-+++ b/dlls/d3d9-nine/device_wrap.h
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/device_wrap.h wine-d3d9-4.21/dlls/d3d9-nine/device_wrap.h
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/device_wrap.h	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/device_wrap.h	2019-12-02 14:24:02.121864955 +0800
 @@ -0,0 +1,26 @@
 +/*
 + * Copyright 2016 Axel Davy
@@ -1960,11 +1903,9 @@ index 0000000000..8f5e7206a0
 +IDirect3DDevice9ExVtbl *get_device_vtable(void);
 +
 +#endif /* __NINE_DEVICE_WRAP_H */
-diff --git a/dlls/d3d9-nine/dri3.c b/dlls/d3d9-nine/dri3.c
-new file mode 100644
-index 0000000000..3946e7f8bf
---- /dev/null
-+++ b/dlls/d3d9-nine/dri3.c
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/dri3.c wine-d3d9-4.21/dlls/d3d9-nine/dri3.c
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/dri3.c	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/dri3.c	2019-12-02 14:24:02.121864955 +0800
 @@ -0,0 +1,1426 @@
 +/*
 + * Wine DRI3 interface
@@ -3392,11 +3333,9 @@ index 0000000000..3946e7f8bf
 +    LeaveCriticalSection(&present_priv->mutex_present);
 +    return TRUE;
 +}
-diff --git a/dlls/d3d9-nine/dri3.h b/dlls/d3d9-nine/dri3.h
-new file mode 100644
-index 0000000000..3c9309dedb
---- /dev/null
-+++ b/dlls/d3d9-nine/dri3.h
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/dri3.h wine-d3d9-4.21/dlls/d3d9-nine/dri3.h
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/dri3.h	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/dri3.h	2019-12-02 14:24:02.125864955 +0800
 @@ -0,0 +1,91 @@
 +/*
 + * Wine X11DRV DRI3 interface
@@ -3489,11 +3428,9 @@ index 0000000000..3c9309dedb
 +BOOL PRESENTWaitReleaseEvent(PRESENTpriv *present_priv);
 +
 +#endif /* __WINE_DRI3_H */
-diff --git a/dlls/d3d9-nine/present.c b/dlls/d3d9-nine/present.c
-new file mode 100644
-index 0000000000..2d9390a358
---- /dev/null
-+++ b/dlls/d3d9-nine/present.c
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/present.c wine-d3d9-4.21/dlls/d3d9-nine/present.c
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/present.c	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/present.c	2019-12-02 14:24:02.125864955 +0800
 @@ -0,0 +1,1748 @@
 +/*
 + * Wine ID3DAdapter9 support functions
@@ -5243,11 +5180,9 @@ index 0000000000..2d9390a358
 +     * we might in the future let user choose. */
 +    return d3d9_drm->minor_version >= 1;
 +}
-diff --git a/dlls/d3d9-nine/present.h b/dlls/d3d9-nine/present.h
-new file mode 100644
-index 0000000000..a5516877f1
---- /dev/null
-+++ b/dlls/d3d9-nine/present.h
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/present.h wine-d3d9-4.21/dlls/d3d9-nine/present.h
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/present.h	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/present.h	2019-12-02 14:24:02.129864955 +0800
 @@ -0,0 +1,40 @@
 +/*
 + * Wine present interface
@@ -5289,11 +5224,9 @@ index 0000000000..a5516877f1
 +BOOL enable_device_vtable_wrapper(void);
 +
 +#endif /* __WINE_PRESENT_H */
-diff --git a/dlls/d3d9-nine/shader_validator.c b/dlls/d3d9-nine/shader_validator.c
-new file mode 100644
-index 0000000000..03848b2aa2
---- /dev/null
-+++ b/dlls/d3d9-nine/shader_validator.c
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/shader_validator.c wine-d3d9-4.21/dlls/d3d9-nine/shader_validator.c
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/shader_validator.c	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/shader_validator.c	2019-12-02 14:24:02.129864955 +0800
 @@ -0,0 +1,88 @@
 +/*
 + * Direct3D 9 ShaderValidator
@@ -5383,11 +5316,9 @@ index 0000000000..03848b2aa2
 +    IDirect3DShaderValidator9Impl_End
 +};
 +
-diff --git a/dlls/d3d9-nine/shader_validator.h b/dlls/d3d9-nine/shader_validator.h
-new file mode 100644
-index 0000000000..07a5e2d2b4
---- /dev/null
-+++ b/dlls/d3d9-nine/shader_validator.h
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/shader_validator.h wine-d3d9-4.21/dlls/d3d9-nine/shader_validator.h
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/shader_validator.h	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/shader_validator.h	2019-12-02 14:24:02.129864955 +0800
 @@ -0,0 +1,29 @@
 +/*
 + * Direct3D 9 ShaderValidator
@@ -5418,11 +5349,9 @@ index 0000000000..07a5e2d2b4
 +} IDirect3DShaderValidator9Impl;
 +
 +const void *IDirect3DShaderValidator9Vtbl[6];
-diff --git a/dlls/d3d9-nine/version.rc b/dlls/d3d9-nine/version.rc
-new file mode 100644
-index 0000000000..bfafc2f24a
---- /dev/null
-+++ b/dlls/d3d9-nine/version.rc
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/version.rc wine-d3d9-4.21/dlls/d3d9-nine/version.rc
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/version.rc	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/version.rc	2019-12-02 14:24:02.133864955 +0800
 @@ -0,0 +1,26 @@
 +/*
 + * Copyright 2015 Patrick Rudolph
@@ -5450,11 +5379,9 @@ index 0000000000..bfafc2f24a
 +#define WINE_PRODUCTVERSION_STR "5.3.1.904"
 +
 +#include "wine/wine_common_ver.rc"
-diff --git a/dlls/d3d9-nine/wndproc.c b/dlls/d3d9-nine/wndproc.c
-new file mode 100644
-index 0000000000..0ed80de7d7
---- /dev/null
-+++ b/dlls/d3d9-nine/wndproc.c
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/wndproc.c wine-d3d9-4.21/dlls/d3d9-nine/wndproc.c
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/wndproc.c	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/wndproc.c	2019-12-02 14:24:02.133864955 +0800
 @@ -0,0 +1,277 @@
 +/*
 + * Copyright 2016 Patrick Rudolph
@@ -5733,11 +5660,9 @@ index 0000000000..0ed80de7d7
 +    nine_wndproc_mutex_unlock();
 +    return TRUE;
 +}
-diff --git a/dlls/d3d9-nine/wndproc.h b/dlls/d3d9-nine/wndproc.h
-new file mode 100644
-index 0000000000..15f26d491a
---- /dev/null
-+++ b/dlls/d3d9-nine/wndproc.h
+diff -Nur -Nur wine-d3d9-4.21.orig/dlls/d3d9-nine/wndproc.h wine-d3d9-4.21/dlls/d3d9-nine/wndproc.h
+--- wine-d3d9-4.21.orig/dlls/d3d9-nine/wndproc.h	1970-01-01 08:00:00.000000000 +0800
++++ wine-d3d9-4.21/dlls/d3d9-nine/wndproc.h	2019-12-02 14:24:02.133864955 +0800
 @@ -0,0 +1,41 @@
 +/*
 + * Direct3D wine internal interface main
@@ -5780,6 +5705,3 @@ index 0000000000..15f26d491a
 +#define NINE_WINDOW_CLASS_NAME "Gallium_Nine_Window"
 +
 +#endif
--- 
-2.20.1
-

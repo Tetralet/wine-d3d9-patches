@@ -1,35 +1,6 @@
-From 5d144635348cb686f89593311bd6218aa99b5dc3 Mon Sep 17 00:00:00 2001
-From: Nick Sarnie <sarnex@gentoo.org>
-Date: Mon, 18 Feb 2019 10:04:44 -0500
-Subject: [PATCH] Staging Helper
-
-Signed-off-by: Nick Sarnie <sarnex@gentoo.org>
----
- dlls/ntdll/loadorder.c      |  2 ++
- programs/winecfg/resource.h |  1 +
- programs/winecfg/staging.c  | 25 +++++++++++++++++++++++++
- programs/winecfg/winecfg.rc |  1 +
- 4 files changed, 29 insertions(+)
-
-diff --git a/dlls/ntdll/loadorder.c b/dlls/ntdll/loadorder.c
-index d05d7b321e..7945d2a599 100644
---- a/dlls/ntdll/loadorder.c
-+++ b/dlls/ntdll/loadorder.c
-@@ -629,8 +629,10 @@ WCHAR* get_redirect( const WCHAR *app_name, const WCHAR *path, BYTE *buffer, ULO
-         goto done;
- 
-     /* then module basename without '*' (only if explicit path) */
-+    /*
-     if (basename != module+1 && (ret = get_redirect_value( std_key, app_key, basename, buffer, size )))
-         goto done;
-+    */
- 
-     /* and last the hard-coded default */
-     ret = NULL;
-diff --git a/programs/winecfg/resource.h b/programs/winecfg/resource.h
-index 96f2429090..06f41f5c70 100644
---- a/programs/winecfg/resource.h
-+++ b/programs/winecfg/resource.h
+diff -Nur -Nur wine-d3d9-4.21.orig/programs/winecfg/resource.h wine-d3d9-4.21/programs/winecfg/resource.h
+--- wine-d3d9-4.21.orig/programs/winecfg/resource.h	2019-12-02 13:42:13.169900792 +0800
++++ wine-d3d9-4.21/programs/winecfg/resource.h	2019-12-02 14:12:54.669874489 +0800
 @@ -219,6 +219,7 @@
  #define IDC_ENABLE_EAX                  9003
  #define IDC_ENABLE_HIDEWINE             9004
@@ -38,11 +9,10 @@ index 96f2429090..06f41f5c70 100644
  
  /* About tab */
  #define IDC_ABT_OWNER                8432
-diff --git a/programs/winecfg/staging.c b/programs/winecfg/staging.c
-index df9bf0f1ad..cccfa02957 100644
---- a/programs/winecfg/staging.c
-+++ b/programs/winecfg/staging.c
-@@ -121,6 +121,23 @@ static void gtk3_set(BOOL status)
+diff -Nur -Nur wine-d3d9-4.21.orig/programs/winecfg/staging.c wine-d3d9-4.21/programs/winecfg/staging.c
+--- wine-d3d9-4.21.orig/programs/winecfg/staging.c	2019-12-02 13:42:13.169900792 +0800
++++ wine-d3d9-4.21/programs/winecfg/staging.c	2019-12-02 14:12:54.673874489 +0800
+@@ -121,6 +121,23 @@
  #endif
  }
  
@@ -66,7 +36,7 @@ index df9bf0f1ad..cccfa02957 100644
  static void load_staging_settings(HWND dialog)
  {
      CheckDlgButton(dialog, IDC_ENABLE_CSMT, csmt_get() ? BST_CHECKED : BST_UNCHECKED);
-@@ -128,6 +145,7 @@ static void load_staging_settings(HWND dialog)
+@@ -128,6 +145,7 @@
      CheckDlgButton(dialog, IDC_ENABLE_EAX, eax_get() ? BST_CHECKED : BST_UNCHECKED);
      CheckDlgButton(dialog, IDC_ENABLE_HIDEWINE, hidewine_get() ? BST_CHECKED : BST_UNCHECKED);
      CheckDlgButton(dialog, IDC_ENABLE_GTK3, gtk3_get() ? BST_CHECKED : BST_UNCHECKED);
@@ -74,8 +44,8 @@ index df9bf0f1ad..cccfa02957 100644
  
  #ifndef HAVE_VAAPI
      disable(IDC_ENABLE_VAAPI);
-@@ -135,6 +153,9 @@ static void load_staging_settings(HWND dialog)
- #ifndef HAVE_GTK3
+@@ -135,6 +153,9 @@
+ #if !defined(HAVE_GTK_GTK_H) || !defined(SONAME_LIBGTK_3)
      disable(IDC_ENABLE_GTK3);
  #endif
 +#if !defined(HAVE_D3D9NINE)
@@ -84,7 +54,7 @@ index df9bf0f1ad..cccfa02957 100644
  }
  
  INT_PTR CALLBACK StagingDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-@@ -180,6 +201,10 @@ INT_PTR CALLBACK StagingDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
+@@ -180,6 +201,10 @@
              gtk3_set(IsDlgButtonChecked(hDlg, IDC_ENABLE_GTK3) == BST_CHECKED);
              SendMessageW(GetParent(hDlg), PSM_CHANGED, 0, 0);
              return TRUE;
@@ -95,11 +65,10 @@ index df9bf0f1ad..cccfa02957 100644
          }
          break;
      }
-diff --git a/programs/winecfg/winecfg.rc b/programs/winecfg/winecfg.rc
-index 33f2642ed6..ad9c9d894f 100644
---- a/programs/winecfg/winecfg.rc
-+++ b/programs/winecfg/winecfg.rc
-@@ -324,6 +324,7 @@ BEGIN
+diff -Nur -Nur wine-d3d9-4.21.orig/programs/winecfg/winecfg.rc wine-d3d9-4.21/programs/winecfg/winecfg.rc
+--- wine-d3d9-4.21.orig/programs/winecfg/winecfg.rc	2019-12-02 13:42:13.169900792 +0800
++++ wine-d3d9-4.21/programs/winecfg/winecfg.rc	2019-12-02 14:12:54.677874489 +0800
+@@ -324,6 +324,7 @@
      CONTROL     "Enable Environmental Audio E&xtensions (EAX)",IDC_ENABLE_EAX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,70,230,8
      CONTROL     "&Hide Wine version from applications",IDC_ENABLE_HIDEWINE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,85,230,8
      CONTROL     "Enable &GTK3 Theming",IDC_ENABLE_GTK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,100,230,8
@@ -107,6 +76,3 @@ index 33f2642ed6..ad9c9d894f 100644
  END
  
  LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
--- 
-2.20.1
-
